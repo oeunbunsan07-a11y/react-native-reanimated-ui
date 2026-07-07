@@ -1,24 +1,50 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { OnboardingProvider, useOnboarding } from "@/src/features/onboarding/providers/onboarding-provider";
+import { CusBottomSheetProvider } from "@/src/shared/providers/cus-bottom-sheet-provider";
+import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const App = () => {
+  const { hasSeen, loading } = useOnboarding();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  if (loading) {
+    return null; // or your splash screen
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!hasSeen}>
+          <Stack.Screen name="onboarding" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={hasSeen}>
+          <Stack.Screen name="(tabs)" />
+        </Stack.Protected>
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    </>
+  )
+
+}
+
+export default function RootLayout() {
+  return <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <CusBottomSheetProvider>
+        <OnboardingProvider>
+          <App />
+          {/* <FloatingPlayer
+            imageUrl="https://cdna.artstation.com/p/assets/images/images/100/439/826/large/tai-le-1.jpg"
+            title="Midnight Dreams"
+            subtitle="Album: Starlight"
+            artist="Aurora Waves"
+            isPlaying={true}
+            onNext={() => console.log('Next')}
+            onPrevious={() => console.log('Previous')}
+            duration="4:32"
+            progress={0.45}
+          /> */}
+        </OnboardingProvider>
+      </CusBottomSheetProvider>
+    </GestureHandlerRootView>
+  </>
 }
